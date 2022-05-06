@@ -1,4 +1,4 @@
-import { IUsersAction } from './user.d'
-
+import { IRangesActions } from './ranges.d'
+import { IRecruimentsActions } from "./recruiment.d"
 // main Action Types
-export type AppAction = ITodoActionTypes | IAuthActionTypes | ITagActionTypes | IPageActionTypes | IDeviceActionTypes | IConnectionActionTypes | ISensorTypesActionTypes | IUsersAction | ISetActions | IRoleActions | INavbarActionTypes | IAreaActionTypes | IProjectconfigsAction // | ...
+export type AppAction = IRangesActions | IRecruimentsActions

@@ -1,10 +1,12 @@
 import { createStore, applyMiddleware, combineReducers, compose } from "redux";
 import thunk, { ThunkMiddleware } from "redux-thunk";
 import { AppAction } from "../@types/store";
-import { userReducer } from "./reducers/user";
+import { rangesReducer } from "./reducers/ranges";
+import { recruimentsReducer } from "./reducers/recruiments";
 
 export const rootReducer = combineReducers({
-  users: userReducer
+  ranges: rangesReducer,
+  recruiments: recruimentsReducer
 })
 
 const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;

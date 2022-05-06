@@ -1,19 +1,32 @@
 import React, { lazy, Suspense } from 'react';
 import { Navigate, useLocation, useRoutes } from 'react-router-dom';
+import Spinner from '../components/UI/spinner/Spinner';
 
 const Loadable = (Component) => (props) => {
-
     return (
-        <Suspense fallback={<p>loading...</p>}>
+        <Suspense fallback={<Spinner isLoading />}>
             <Component {...props} />
         </Suspense>
     );
 };
+
 export default function Router() {
     return useRoutes([
         {
             path: 'test',
             element: <Test />
+        },
+        {
+            path: 'jobs',
+            element: <JobsPage />
+        },
+        {
+            path: 'recruitment',
+            element: <RecruitmentPage />
+        },
+        {
+            path: 'test2',
+            element: <Test2 />
         },
         {
             path: 'auth',
@@ -57,13 +70,13 @@ export default function Router() {
 }
 // test
 const Test = Loadable(lazy(() => import('../components/test/Test')));
-;
 
 // Authentication
-const Login = Loadable(lazy(() => import('../components/test/Test')));
-const Register = Loadable(lazy(() => import('../components/test/Test')));
+// const Login = Loadable(lazy(() => import('../components/test/Test')));
+// const Register = Loadable(lazy(() => import('../components/test/Test')));
 // Main
-const HomePage = Loadable(lazy(() => import('../components/home/Home')));
-const NotFound = Loadable(lazy(() => import('../components/test/Test')));
-//components
-// const CustomNavbar = Loadable(lazy(() => import('../components/Navbar/Navbar')));
+const HomePage = Loadable(lazy(() => import('../pages/home/Home')));
+// const NotFound = Loadable(lazy(() => import('../components/test/Test')));
+const JobsPage = Loadable(lazy(() => import('../pages/jobs/Jobs')));
+const RecruitmentPage = Loadable(lazy(() => import('../pages/recruitments/Recruitment')));
+const Test2 = Loadable(lazy(() => import('../components/test/Test2')));
