@@ -122,4 +122,6 @@ class RecruitmentItem(RecruitmentBaseItem, DivarBaseItem):
                     self.fetch_data(item)
             else:
                 self.fetch_data(i)
+        
+        self['category'] = dict_data['data']['category']['title']
 
