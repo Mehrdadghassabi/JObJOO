@@ -55,8 +55,8 @@ class AdsBase(models.Model):
         time = None
         if data.get('time', False):
             time = data.pop('time')
-        if time < calendar.timegm(timezone.now().timetuple()) - 2592000:
-            time = None
+            if time < calendar.timegm(timezone.now().timetuple()) - 2592000:
+                time = None
         if data.get('search', False):
             search = data.pop('search')
         if time is not None:

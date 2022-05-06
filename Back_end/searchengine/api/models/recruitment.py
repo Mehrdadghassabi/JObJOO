@@ -48,19 +48,7 @@ class RecruimentAds(AdsBase):
 
         categories = cls.objects.filter(
                 time__gte=int(timezone.now().timestamp()) - 2592000
-                ).filter(category__isnull=False, sub_category__isnull=False).values(
-            'category',
-            'sub_category'
-            ).annotate(
-            category_count=Count('category'),
-            sub_category_count=Count('sub_category')
-        ).order_by('-category_count', '-sub_category_count').values('category', 'sub_category')
-        sub_category = dict()
-        for i in categories:
-            if sub_category.get(i['category'], False):
-                sub_category[i['category']].append(i['sub_category'])
-            else:
-                sub_category[i['category']] = [i['sub_category']]
+                ).filter(category__isnull=False).distinct('category').values('category')
 
         education = cls.objects.filter(
                     time__gte=int(timezone.now().timestamp()) - 2592000
@@ -84,7 +72,7 @@ class RecruimentAds(AdsBase):
             'max_salary': recruiment['max_salary'],
             'min_experience': recruiment['min_experience'],
             'max_experience': recruiment['max_experience'],
-            'categories': sub_category,
+            'categories': [i['category'] for i in categories],
             'education' : [i['education'] for i in education],
             'cooperation' : [i['cooperation'] for i in cooperation],
             'gender' : [i['gender'] for i in gender],
@@ -119,12 +107,12 @@ class RecruimentAds(AdsBase):
                 min = self.salary - 5000000
                 max = self.salary + 5000000
 
-            query['salary_gte'] = min
-            query['salary_lte'] = max
+            query['salary__gte'] = min
+            query['salary__lte'] = max
         
         if self.experience is not None and self.experience != 0:
-            query['experience_gte'] = self.experience - 1
-            query['experience_lte'] = self.experience + 10
+            query['experience__gte'] = self.experience - 1
+            query['experience__lte'] = self.experience + 10
 
         return RecruimentAds.objects.exclude(token=self.token).filter(
             **query

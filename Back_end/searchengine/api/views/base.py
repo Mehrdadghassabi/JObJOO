@@ -272,16 +272,16 @@ class GetAd(APIView):
         try:
             if type == 'recruiment':
                 return Response(
-                serializers.ResultSearchRecruimentSerializer(
-                models.RecruimentAds.objects.get(token=id),
-                context={'request': request}
-                )
+                    serializers.RecruimentSerializer(
+                        models.RecruimentAds.objects.get(token=id),
+                        context={'request': request}
+                ).data
                 )
             raise Exception
         except Exception as e:
             return Response(
             {
-            'message': 'Invalid type or id'
+            'message': 'Invalid type or id' + str(type) + '\n' +str(e)
             },
             status=status.HTTP_400_BAD_REQUEST
             )

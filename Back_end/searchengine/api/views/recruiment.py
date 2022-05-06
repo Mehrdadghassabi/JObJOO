@@ -47,6 +47,33 @@ class SearchRecruiment(APIView):
         status=status.HTTP_400_BAD_REQUEST
         )
 
+    def get(self, request, page):
+        serializer = serializers.SearchRecruimentSerializer(data=request.data)
+        if serializer.is_valid():
+            data = models.RecruimentAds.search(**serializer.validated_data)
+            paginator = Paginator(data, 12)
+            try:
+                result = serializers.ResultSearchRecruimentSerializer(paginator.page(page), many=True,
+                context={'request': request})
+            except:
+                result = serializers.ResultSearchRecruimentSerializer(paginator.page(1), many=True,
+                context={'request': request})
+            return Response(
+            {
+            'page_counts': paginator.num_pages,
+            'counts': paginator.count,
+            'current_page': page,
+            'result': result.data
+            },
+            status=status.HTTP_200_OK
+            )
+        return Response(
+        {
+        'message': serializer.errors
+        },
+        status=status.HTTP_400_BAD_REQUEST
+        )
+
 
 class MainPageRecruiment(APIView):
     permission_classes = [AllowAny, ]
@@ -56,11 +83,11 @@ class MainPageRecruiment(APIView):
             recruiment = models.RecruimentAds.objects.raw(
             '''select * from 
             (
-            (select *, row_number() over (order by time desc) r from recruiment where source_id=1 limit 3 offset {}) union 
-            (select *, row_number() over (order by time desc) r from recruiment where source_id=2 limit 3 offset {})
+            (select *, row_number() over (order by time desc) r from recruiment where source_id=1 limit 5 offset {}) union 
+            (select *, row_number() over (order by time desc) r from recruiment where source_id=2 limit 5 offset {})
             ) as x order by r;'''.format(
-            3 * (page - 1),
-            3 * (page - 1),
+            5 * (page - 1),
+            5 * (page - 1),
             )
             )
             count = models.RecruimentAds.objects.all().count()
@@ -72,7 +99,7 @@ class MainPageRecruiment(APIView):
             )
             return Response(
             {
-            'page_counts': count // 12,
+            'page_counts': count // 10,
             'counts': count,
             'current_page': page,
             'result': result.data
