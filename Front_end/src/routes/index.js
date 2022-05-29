@@ -11,18 +11,17 @@ const Loadable = (Component) => (props) => {
 };
 
 export default function Router() {
+
+    const location = useLocation()
+
     return useRoutes([
         {
             path: 'test',
             element: <Test />
         },
         {
-            path: 'jobs',
-            element: <JobsPage />
-        },
-        {
             path: 'recruitment',
-            element: <RecruitmentPage />
+            element: <RecruitmentPage jobDetails={location.state} />
         },
         {
             path: 'test2',
@@ -77,6 +76,5 @@ const Test = Loadable(lazy(() => import('../components/test/Test')));
 // Main
 const HomePage = Loadable(lazy(() => import('../pages/home/Home')));
 // const NotFound = Loadable(lazy(() => import('../components/test/Test')));
-const JobsPage = Loadable(lazy(() => import('../pages/jobs/Jobs')));
-const RecruitmentPage = Loadable(lazy(() => import('../pages/recruitments/Recruitment')));
+const RecruitmentPage = Loadable(lazy(() => import('../pages/recruitment/Recruitment')));
 const Test2 = Loadable(lazy(() => import('../components/test/Test2')));
