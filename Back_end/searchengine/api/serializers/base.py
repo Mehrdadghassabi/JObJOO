@@ -108,7 +108,7 @@ class SaveFavourite(serializers.ModelSerializer):
             if attrs.get('type') == 'recruiment':
                 models.RecruimentAds.objects.get(token=attrs.get('token'))
             models.Favourite.objects.get(
-                user=self.context.get('request').user,
+                user=self.context.get('user'),
                 token=attrs.get('token'),
                 type=attrs.get('type')
                 )

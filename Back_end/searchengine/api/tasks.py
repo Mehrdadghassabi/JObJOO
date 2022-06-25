@@ -1,5 +1,6 @@
 from requests import post
 from datetime import datetime
+from api.services import recruiment_services
 import json
 
 from searchengine.celery import app
@@ -34,3 +35,9 @@ def call_divar_spider():
     json_data = json.loads(response.content)
 
     print(json_data)
+
+
+@app.task
+def recruiment_service(function, *args, **kwargs):
+   class_method = getattr(recruiment_services, function)
+   return class_method(recruiment_services(), *args, **kwargs)

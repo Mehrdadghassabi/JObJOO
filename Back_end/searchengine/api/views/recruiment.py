@@ -4,6 +4,7 @@ from django.core.paginator import Paginator
 from django.db.models.expressions import Window
 from django.db.models.functions import RowNumber
 from django.db.models import F
+from django.core.cache import cache
 
 from rest_framework import status
 from rest_framework.permissions import AllowAny
@@ -83,14 +84,18 @@ class MainPageRecruiment(APIView):
             recruiment = models.RecruimentAds.objects.raw(
             '''select * from 
             (
-            (select *, row_number() over (order by time desc) r from recruiment where source_id=1 limit 5 offset {}) union 
-            (select *, row_number() over (order by time desc) r from recruiment where source_id=2 limit 5 offset {})
+            (select *, row_number() over (order by time desc) r from recruiment where source_id=1 limit 6 offset {}) union 
+            (select *, row_number() over (order by time desc) r from recruiment where source_id=2 limit 6 offset {})
             ) as x order by r;'''.format(
-            5 * (page - 1),
-            5 * (page - 1),
+            6 * (page - 1),
+            6 * (page - 1),
             )
             )
-            count = models.RecruimentAds.objects.all().count()
+            count = cache.get('recruiment_counts')
+
+            if count is None:
+                count = models.RecruimentAds.objects.all().count()
+                cache.set('recruiment_counts', count, timeout=60 * 60 * 24 * 1)
             
             result = serializers.ResultSearchRecruimentSerializer(
             recruiment,
@@ -99,7 +104,7 @@ class MainPageRecruiment(APIView):
             )
             return Response(
             {
-            'page_counts': count // 10,
+            'page_counts': count // 12,
             'counts': count,
             'current_page': page,
             'result': result.data

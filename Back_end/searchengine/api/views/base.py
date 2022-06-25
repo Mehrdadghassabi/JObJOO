@@ -1,4 +1,6 @@
 from itertools import chain
+from multiprocessing.dummy import active_children
+from urllib import response
 
 from django.core.paginator import Paginator
 
@@ -9,6 +11,9 @@ from rest_framework.views import APIView
 
 from api import serializers
 from api import models
+from api import tasks
+from api.services import recruiment_services
+from api.utils import Request
 
 
 class SimilarAd(APIView):
@@ -99,101 +104,54 @@ class Favourite(APIView):
         try:
             typ = request.query_params.get('type')
             page = int(request.query_params.get('page', 1))
-            if typ:
-                if typ in [i[0] for i in models.active_search.TYPES]:
-                    favourites = models.Favourite.objects.filter(user=request.user, type=typ).order_by('-time')
-                    paginator = Paginator(favourites, 12)
-                    try:
-                        result = paginator.page(page)
-                    except:
-                        result = paginator.page(1)
-                        page = 1
-                    ids = [i.token for i in result]
-                    if typ == 'recruiment':
-                        data = serializers.FavouriteResultRecruiment(
-                        models.RecruimentAds.objects.filter(token__in=ids),
-                        many=True
-                        ).data
-                    else:
-                        return Response(
-                        {
-                        'message': 'Invalid type'
-                        },
-                        status=status.HTTP_400_BAD_REQUEST
-                        )
-            else:
-                favourites = models.Favourite.objects.filter(user=request.user).order_by('-time')
-                paginator = Paginator(favourites, 12)
-                try:
-                    result = paginator.page(page)
-                except:
-                    result = paginator.page(1)
-                    page = 1
-                data = []
-                for i in result:
-                    if i.type == 'recruiment':
-                        try:
-                            data.append(
-                            serializers.FavouriteResultRecruiment(
-                            models.RecruimentAds.objects.get(token=i.token)
-                            ).data
-                            )
-                        except models.RecruimentAds.DoesNotExist:
-                            i.delete()
-                return Response(
-                {
-                'page': page,
-                'pages': paginator.num_pages,
-                'data': data
-                }
-                )
+            user = request.user.id
+            message, state = tasks.recruiment_service.delay('get_favorites', typ, page, user).get()
+            return Response(
+             message
+            ,
+            status=state
+            )
         except Exception as e:
             return Response(
             {
-                'message': 'Unexpected error, try again later',
+            'message': 'Internal Server Error' + str(e)
             },
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
     def post(self, request):
-        serializer = serializers.SaveFavourite(data=request.data, context={'request': request})
-        if serializer.is_valid():
-            if serializer.save(user=request.user) is not None:
-                return Response(
-                {
-                'message': 'Favourite saved successfully!'
-                },
-                status=status.HTTP_200_OK
-                )
+        try:
+            data = request.data
+            user = request.user.id
+            message, state = tasks.recruiment_service.delay('save_favorite', data, user).get()
+            return Response(
+            message,
+            status=state
+            )
+        except Exception as e:
             return Response(
             {
-            'message': 'Ad is in your favourite or invalid ID'
+            'message': 'Internal Server Error' + str(e)
             },
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        return Response(
-        {
-        'message': serializer.errors
-        },
-        status=status.HTTP_400_BAD_REQUEST
-        )
 
     def delete(self, request):
         try:
-            typ = request.query_params.get('type')
+            typ = typ = request.query_params.get('type')
             token = int(request.query_params.get('token'))
-            models.Favourite.objects.get(user=request.user, type=typ, token=token).delete()
+            user = request.user.id
+            message, state = tasks.recruiment_service.delay('delete_favorite', typ, token, user).get()
             return Response(
-                    {
-                        'message': 'Favourite deleted successfully!'
-                    }, status=status.HTTP_200_OK
-                    )
-        except:
+                message,
+                status=state
+            )
+        except Exception as e:
             return Response(
             {
-            'message': 'Invalid data!'
+            'message': 'Internal Server Error' + str(e)
             },
-            status=status.HTTP_400_BAD_REQUEST
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
 
