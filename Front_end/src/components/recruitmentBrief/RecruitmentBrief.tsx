@@ -1,11 +1,13 @@
 import { Button, Card, Grid, Paper, Typography } from "@mui/material";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import nonSaveIc from "../../assets/icons/ic-save.png";
 import saveIc from "../../assets/icons/ic-save-black.png";
 import corporationLogo from "../../assets/img/corporation-logo.jpg";
 import corporationIc from "../../assets/icons/ic-corpo.png";
 import cityIc from "../../assets/icons/ic-pin.png";
 import Time from "../UI/Time/Time";
+import { Axios } from "../../utils/axios";
+import { toast } from "react-toastify";
 
 const cardStyle = {
     width: '100%',
@@ -84,19 +86,73 @@ interface IProps {
     province: string
     time: Date
     url: string
+    token: number
+    favourite: boolean
 }
 
 const RecruitmentBrief = (props: IProps) => {
 
     const [saveRecruitment, setSaveRecruitment] = useState(false);
-    const saveHandler = () => {
+
+    useEffect(() => {
+        console.log(props.favourite)
+        props.favourite ? setSaveRecruitment(true) : setSaveRecruitment(false)
+    }, [props.favourite]);
+
+    const toggleSaveHandler = () => {
         setSaveRecruitment(!saveRecruitment);
+    }
+
+    const saveHandler = async () => {
+        toggleSaveHandler()
+        const token = localStorage.getItem('token')
+
+        const response = await Axios.post('/api/favourite/',
+            {
+                type: "recruiment",
+                token: props.token
+            },
+            {
+                headers: {
+                    Authorization: `Token ${token}`
+                }
+            })
+            .then(response => {
+                console.log(response.data)
+                toast(response.data.message)
+            })
+            .catch(error => {
+                console.log(error)
+                toast(error)
+            });
+    }
+
+    const unSaveHandler = async () => {
+        toggleSaveHandler()
+        const token = localStorage.getItem('token')
+
+        const response = await Axios.delete(`/api/favourite/?type=recruiment&token=${props.token}`,
+            {
+                headers: {
+                    Authorization: `Token ${token}`
+                }
+            })
+
+            .then(response => {
+                console.log(response.data)
+                toast(response.data.message)
+            })
+            .catch(error => {
+                console.log(error)
+                toast(error)
+            });
+
     }
 
     return (
         <Card sx={cardStyle}>
-            {!saveRecruitment && <img src={nonSaveIc} alt='save-icon' onClick={saveHandler} />}
-            {saveRecruitment && <img src={saveIc} alt='save-icon' onClick={saveHandler} />}
+            {!saveRecruitment && <img src={nonSaveIc} alt='save-icon' onClick={() => { localStorage.getItem("token") !== null && saveHandler() }} />}
+            {saveRecruitment && <img src={saveIc} alt='save-icon' onClick={() => { localStorage.getItem("token") !== null && unSaveHandler() }} />}
             <Typography sx={titleStyle}>{props.title}</Typography>
             <Grid container justifyContent='end'>
                 <Grid item sx={corporationStyle}>{props.cooperation}</Grid>
@@ -107,7 +163,16 @@ const RecruitmentBrief = (props: IProps) => {
                 <Grid item sx={{ marginTop: '15px' }}><img src={cityIc} /></Grid>
             </Grid>
             <Typography sx={requestDateStyle}><Time time={props.time} /></Typography>
-            <Button sx={buttonStyle}><a href={props.url} target="_blank" > مشاهده آگهی در جابینجا </a> </Button>
+            <Button sx={buttonStyle}><a href={props.url} target="_blank" style={{
+                textDecoration: 'none',
+                fontSize: '18px',
+                fontWeight: 'normal',
+                fontStretch: 'normal',
+                fontStyle: 'normal',
+                lineHeight: 1.67,
+                letterSpacing: 'normal',
+                color: 'black'
+            }}> مشاهده آگهی در جابینجا </a> </Button>
         </Card>
     )
 }
